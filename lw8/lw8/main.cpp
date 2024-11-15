@@ -1,5 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <iostream>
+#include <queue>
+#include <time.h>
 
 using namespace std;
 
@@ -23,7 +25,8 @@ struct Queue
 
 int** create_adjacency_matrix(int v);
 int cout_matrix(int** G, int v);
-void BFS_matrix(int** g, int v, int size, bool* vis, int* d);
+void BFS_matrix_Queue(int** g, int v, int size, bool* vis, int* d);
+void BFS_matrix_q(int** g, int v, int size, bool* vis, int* d);
 
 struct Queue* make_struct(int data);
 int pop_q();
@@ -33,29 +36,60 @@ struct Queue* head = NULL, * last = NULL, * f = NULL, * tmp = NULL;
 
 void main() 
 {
-	int size = 0, to_start_with;
-	cout << "input graph size: ";
-	cin >> size;
-	int** M = create_adjacency_matrix(size);
-	cout_matrix(M, size);
-	cout << endl;
+	clock_t start = 0, end = 0, res_q = 0, res_Queue = 0;
+	int size, to_start_with;
 
-	bool *visited = new bool[size];
-	int *depth = new int[size];
-	for (int i = 0; i < size; i++) 
-	{
-		visited[i] = 0;
-		depth[i] = 0;
-	}
-	cout << "input input number of vertex to star with: ";
+	cout << "input input number of vertex to start Broad-first search with: ";
 	cin >> to_start_with;
-	cout << endl;
-	cout << "Breadth-first matrix search: " << endl;
-	while (!visited[to_start_with])
+
+	for (size = 1000; size <= 10000; size = size + 1000) 
 	{
-		BFS_matrix(M, to_start_with, size, visited, depth);
+		int** M = create_adjacency_matrix(size);
+		//cout_matrix(M, size);
+		//cout << endl;
+
+		bool *visited = new bool[size];
+		int *depth = new int[size];
+		for (int i = 0; i < size; i++) 
+		{
+			visited[i] = 0;
+			depth[i] = 0;
+		}
+	
+		//cout << "Breadth-first search using c++ class queue: " << endl;
+
+		start = clock();
+		while (!visited[to_start_with])
+		{
+			BFS_matrix_q(M, to_start_with, size, visited, depth);
+		}
+		end = clock();
+		res_q = end - start;
+		//cout << endl << "---------------------------------" << endl;
+	
+		start = 0, end = 0;
+		for (int i = 0; i < size; i++)
+		{
+			visited[i] = 0;
+			depth[i] = 0;
+		}
+		//cout << "Breadth-first search using self-made Queue struct: " << endl;
+		start = clock();
+		while (!visited[to_start_with])
+		{
+			BFS_matrix_Queue(M, to_start_with, size, visited, depth);
+		}
+		end = clock();
+		res_Queue = end - start;
+		cout << "---------------------------------" << endl;
+
+		cout << "matrix size: " << size << endl;
+		cout << "time spent with using c++ class queue: " << res_q / 10000.0 << endl;
+		cout << "time spent with using self-made Queue struct: " << res_Queue / 10000.0 << endl;
+		delete[] M;
+		delete[] visited;
+		delete[] depth;
 	}
-	cout << endl << "---------------------------------" << endl;
 	return;
 }
 
@@ -107,7 +141,7 @@ int cout_matrix(int** g, int v)
 	return 1;
 }
 
-void BFS_matrix(int** g, int v, int size, bool* vis, int* d)
+void BFS_matrix_Queue(int** g, int v, int size, bool* vis, int* d)
 {
 	struct Queue* q = NULL;
 	push_q(v);
@@ -118,7 +152,7 @@ void BFS_matrix(int** g, int v, int size, bool* vis, int* d)
 	{
 		v = head->inf;
 		pop_q();
-		cout << v << " -> ";
+		//cout << v << " -> ";
 		for (int i = 0; i < size; i++)
 		{
 			if (g[v][i] == 1 && !vis[i]) 
@@ -126,6 +160,30 @@ void BFS_matrix(int** g, int v, int size, bool* vis, int* d)
 				d[i] = d[v] + 1;
 				vis[i] = 1;
 				push_q(i);
+			}
+		}
+	}
+}
+
+void BFS_matrix_q(int** g, int v, int size, bool* vis, int* d)
+{
+	queue<int> q;
+	q.push(v);
+	vis[v] = 1;
+	d[v] = 0;
+
+	while (!q.empty())
+	{
+		v = q.front();
+		q.pop();
+		//cout << v << " -> ";
+		for (int i = 0; i < size; i++)
+		{
+			if (g[v][i] == 1 && !vis[i])
+			{
+				d[i] = d[v] + 1;
+				vis[i] = 1;
+				q.push(i);
 			}
 		}
 	}
